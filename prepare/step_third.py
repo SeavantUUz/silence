@@ -28,7 +28,6 @@ def line_resize(lines, width):
 def main():
     stdscr = curses.initscr()
     curses.nocbreak()
-    cur
     mode = NORMAL
     max_y, max_x = stdscr.getmaxyx()
     print_before, z = covert("输入一个文件地址:")
