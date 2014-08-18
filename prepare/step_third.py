@@ -33,14 +33,23 @@ def main():
     print_before, z = covert("输入一个文件地址:")
     stdscr.addstr((max_y-1)/2-1, (max_x-1-z)/2-1, print_before)
     stdscr.move((max_y-1)/2, (max_x-1-z)/2-1)
-    path = stdscr.getstr()
+    path = ""
+    while True:
+        ch = stdscr.getch()
+        if ch == curses.KEY_ENTER or ch == 10:
+            break
+        else:
+            path += chr(ch)
+            stdscr.addstr(chr(ch))
     stdscr.move(0,0)
     stdscr.clear()
     stdscr.refresh()
     with open(path,'r') as f:
         lines = list(line_resize(f.readlines(), 5))
-        for line in lines[-10:]:
+        for line in lines[-20:]:
             stdscr.addstr(line)
+    curses.cbreak()
+    curses.noecho()
     while True:
         ch = stdscr.getch()
         if ch == 27:
