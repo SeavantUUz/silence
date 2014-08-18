@@ -25,6 +25,19 @@ def line_resize(lines, width):
             yield line.encode(code)
             index += 1
 
+def combine(func):
+    def wrapper(*args,**kwargs):
+        value = "".join(reversed(list(func(*args,**kwargs))))
+        return value
+    return wrapper
+
+@combine
+def parse(value):
+    while value:
+        ch = value % 1000
+        value /= 1000
+        yield chr(ch)
+
 def main():
     stdscr = curses.initscr()
     curses.nocbreak()
@@ -54,6 +67,11 @@ def main():
         ch = stdscr.getch()
         if ch == 27:
             break
+        else:
+            string = parse(ch)
+            stdscr.addstr(string)
+            # stdscr.addstr(str(ch))
+
 
 if __name__ == "__main__":
     NORMAL = 0
