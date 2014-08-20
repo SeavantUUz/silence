@@ -5,7 +5,7 @@ def covert(string,code):
     lenth = len(new_string)
     return new_string.encode(code), lenth
 
-def line_resize(lines, width):
+def line_resize(lines, width, code):
     count = len(lines)
     index = 0
     while index < count:
