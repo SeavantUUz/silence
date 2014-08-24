@@ -1,7 +1,7 @@
 # coding: utf-8
 import socket
 import logging
-from gevnet import monkey
+from gevent import monkey
 monkey.patch_socket()
 import select
 monkey.patch_select()
@@ -39,6 +39,7 @@ class Server(object):
     def _accept_loop(self):
         while True:
             read_sockets, write_sockets, error_sockets = select.select(self.connect_sockets, [], [])
+            end_socks = []
             for sock in read_sockets:
                 if sock == self.server_socket:
                     sockfd, addr = self.server_socket.accept()
@@ -54,5 +55,7 @@ class Server(object):
                     except:
                         self.broadcast(sock, "Client {} is offline".format(addr))
                         sock.close()
-                        self.connect_sockets.remove(sock)
+                        end_socks.append(sock)
+            for _socket in end_socks:
+                self.connect_sockets.remove(_socket)
        self.end() 
