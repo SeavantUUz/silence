@@ -18,7 +18,7 @@ class Client(object):
 
     def start(self):
         try:
-            self.client_socket.connect((host,port))
+            self.client_socket.connect((self.host,self.port))
         except:
             logging.error("unable to connect")
             sys.exit()
@@ -37,6 +37,7 @@ class Client(object):
                         data = _socket.recv(4096)
                         if data:
                             self.records.append(data)
+                            print data
                         else:
                             logging.error("\nDisconnect from server")
                             sys.exit()
@@ -45,3 +46,7 @@ class Client(object):
                         self.client_socket.send(msg)
         except KeyboardInterrupt:
             self.end()
+
+if __name__ == "__main__":
+    client = Client()
+    client.start()
