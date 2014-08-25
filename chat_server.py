@@ -17,8 +17,11 @@ class Server(object):
         self.port = 3657
         self.connect_sockets.append(self.server_socket)
         self.ui = UI()
+        self.is_started = False
     
     def run(self):
+        if not self.is_started:
+            self.start()
         self._accept_loop()
 
     def start(self):

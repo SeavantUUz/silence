@@ -1,4 +1,7 @@
 #coding: utf-8
+
+__all__ = ['convert','line_resize','parse','draw_line','draw_screen','move','draw_input','check_pos']
+
 import locale
 locale.setlocale(locale.LC_ALL,'')
 code = locale.getpreferredencoding()
@@ -38,7 +41,7 @@ def parse(value):
         yield chr(ch)
 
 def draw_line(stdscr, y, x):
-    stdscr.hline(y-2,0,ord('-'),x)
+    stdscr.hline(y,0,ord('-'),x)
 
 def move(stdscr, y, x):
     stdscr.move(y,x)
@@ -50,14 +53,14 @@ def draw_screen(stdscr, content, hight, width):
     for line in lines[-hight:]:
         stdscr.addstr(covert(line,code)[0])
         y += 1
-        stdscr.move(y, 0)
+        move(stdscr, y, 0)
 
 def draw_input(stdscr, line, y, x):
-    stdscr.move(y,0)
+    move(stdscr, y,0)
     stdscr.clrtoeol()
     self.refresh()
     stdscr.addstr(line)
-    stdscr.move(y,x)
+    move(stdscr,y,x)
 
 def check_pos(stdscr, type_, value):
     y, x = stdscr.getmaxyx()

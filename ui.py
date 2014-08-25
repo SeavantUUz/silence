@@ -14,7 +14,7 @@ class UI(object):
 
     def start(self):
         self.stdscr = curses.initscr()
-        draw_line(self.stdscr,y,x)
+        draw_line(self.stdscr,y-2,x)
         self.is_started = True
 
     def run(self):
@@ -51,7 +51,7 @@ class UI(object):
                 line = ''
                 move(self.stdscr,src_y-1,0)
                 self.stdscr.clrtoeol()
-                self.stdscr_refresh()
+                self.stdscr.refresh()
             elif ch == 127:
                 y,x = curses.getsyx()
                 line = line[:-1]
