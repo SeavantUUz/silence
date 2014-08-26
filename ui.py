@@ -4,10 +4,11 @@ from tools import *
 import sys,traceback
 
 class UI(object):
-    def __init__(self):
+    def __init__(self,sock=None):
         self.content = []
         self.mode = 0
         self.is_started = False
+        self.sock = sock
 
     def append(self, line):
         self.content.append(line)
@@ -46,6 +47,8 @@ class UI(object):
                 line = ''
                 draw_screen(self.stdscr, self.content,srx_y-3,srx_x-1)
                 draw_line(self.stdscr,src_y-2,0)
+                if self.sock:
+                    self.sock.send(line)
             elif ch == 27:
                 self.mode = 1
                 line = ''

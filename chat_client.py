@@ -14,9 +14,11 @@ class Client(object):
         self.host = "0.0.0.0"
         self.port = 3657
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.stdin = sys.stdin
-        self.sockets = [self.stdin, self.client_socket]
-        self.ui = UI() 
+        # self.stdin = sys.stdin
+        self.local_socket_server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        self.local_socket_client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        # self.sockets = [self.stdin, self.client_socket]
+        self.sockets = [self.local_socket_server, self.client_socket]
         self.is_started = False
 
     def run(self):
@@ -26,7 +28,17 @@ class Client(object):
 
     def start(self):
         try:
+            try:
+                os.remove("/tmp/silence.sock")
+            except OSError:
+                pass
+            # local server listen open
+            self.local_socket_server.bind('/tmp/silence.sock')
+            self.local_socket_server.listen(1)
+            # local client connect
+            self.local_socket_client.connect('/tmp/silence.sock')
             self.client_socket.connect((self.host,self.port))
+            self.ui = UI(self.local_socket_client) 
         except:
             logging.error("unable to connect")
             sys.exit()
@@ -38,6 +50,9 @@ class Client(object):
 
     def end(self):
         self.client_socket.close()
+        self.local_socket_client.close()
+        self.local_socket_server.close()
+        os.remove('/tmp/silence.sock')
 
     def _loop(self):
         try:
@@ -53,7 +68,10 @@ class Client(object):
                             logging.error("\nDisconnect from server")
                             sys.exit()
                     else:
-                        msg = sys.stdin.readline()
+                        # msg = sys.stdin.readline()
+                        # self.client_socket.send(msg)
+                        # send message to server
+                        msg = _socket.recv(4096)
                         self.client_socket.send(msg)
         except KeyboardInterrupt:
             self.end()
