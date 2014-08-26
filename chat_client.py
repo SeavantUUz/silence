@@ -5,7 +5,7 @@ from gevent import monkey
 monkey.patch_socket()
 import select
 monkey.patch_select()
-import sys
+import sys,os
 from ui import UI
 
 class Client(object):
@@ -41,6 +41,7 @@ class Client(object):
             self.ui = UI(self.local_socket_client) 
         except:
             logging.error("unable to connect")
+            self.end()
             sys.exit()
         else:
             client_run = self.run
@@ -52,13 +53,18 @@ class Client(object):
         self.client_socket.close()
         self.local_socket_client.close()
         self.local_socket_server.close()
-        os.remove('/tmp/silence.sock')
+        try:
+            os.remove('/tmp/silence.sock')
+        except OSError:
+            pass
+        #self.ui.end()
 
     def _loop(self):
         try:
             while True:
                 rsockets,wsockets,esockets = select.select(self.sockets,[],[])
                 for _socket in rsockets:
+                    # receive msg
                     if _socket == self.client_socket:
                         data = _socket.recv(4096)
                         if data:
@@ -67,13 +73,14 @@ class Client(object):
                         else:
                             logging.error("\nDisconnect from server")
                             sys.exit()
+                    # send msg
                     else:
                         # msg = sys.stdin.readline()
                         # self.client_socket.send(msg)
                         # send message to server
                         msg = _socket.recv(4096)
                         self.client_socket.send(msg)
-        except KeyboardInterrupt:
+        finally:
             self.end()
 
 if __name__ == "__main__":

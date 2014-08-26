@@ -1,11 +1,12 @@
 # coding: utf-8
 import socket
 import logging
+import gevent
 from gevent import monkey
 monkey.patch_socket()
 import select
 monkey.patch_select()
-import UI
+from ui import UI
 
 class Server(object):
     def __init__(self):
@@ -29,8 +30,11 @@ class Server(object):
         self.server_socket.listen(5)
         server_run = self.run
         ui_run = self.ui.run
-        gevent.spawn(server_run)
-        gevent.spawn(ui_run)
+        self.is_started = True
+        ui_run()
+        gevent.joinall([
+            gevent.spawn(server_run),
+            ])
 
     def broadcast(self, sock, data):
         end_socks = []

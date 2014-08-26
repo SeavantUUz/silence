@@ -1,6 +1,6 @@
 #coding: utf-8
 
-__all__ = ['convert','line_resize','parse','draw_line','draw_screen','move','draw_input','check_pos']
+__all__ = ['covert','line_resize','parse','draw_line','draw_screen','move','draw_input','check_pos']
 
 import locale
 locale.setlocale(locale.LC_ALL,'')

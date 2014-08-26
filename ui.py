@@ -15,6 +15,7 @@ class UI(object):
 
     def start(self):
         self.stdscr = curses.initscr()
+        y,x = self.stdscr.getmaxyx()
         draw_line(self.stdscr,y-2,x)
         self.is_started = True
 
@@ -24,7 +25,7 @@ class UI(object):
                 self.start()
             self._insert_loop()
         except:
-            traceback.print_ex(file=sys.stdout)
+            traceback.print_exc(file=sys.stdout)
         finally:
             self.end()
 
@@ -36,7 +37,7 @@ class UI(object):
         curses.cbreak()
         line = ''
         src_y, src_x = self.stdscr.getmaxyx()
-        move(src_y-1,src_x)
+        move(self.stdscr,src_y-1,0)
         while self.mode == 0:
             ch = self.stdscr.getch()
             src_y, src_x = self.stdscr.getmaxyx()
@@ -45,8 +46,9 @@ class UI(object):
                 self.stdscr.refresh()
                 self.content.append(line)
                 line = ''
-                draw_screen(self.stdscr, self.content,srx_y-3,srx_x-1)
-                draw_line(self.stdscr,src_y-2,0)
+                draw_screen(self.stdscr, self.content,src_y-3,src_x-1)
+                draw_line(self.stdscr,src_y-2,src_x)
+                move(self.stdscr,src_y-1,0)
                 if self.sock:
                     self.sock.send(line)
             elif ch == 27:
@@ -68,26 +70,26 @@ class UI(object):
                 line += string
         self._normal_loop()
 
-        def _normal_loop(self):
-            curses.cbreak()
-            curses.noecho()
-            pos_y,pos_x = curses.getsys()
-            while self.mode == 1:
-                ch = self.stdscr.getch()
-                if ch == curses.KEY_UP or ch == ord('k'):
-                    pos_y = check_pos('y',pos_y-1)
-                    move(pos_y,pos_x)
-                elif ch == curses.KEY_DOWN or ch == ord('j'):
-                    pos_y = check_pos('y',pos_y+1)
-                    move(pos_y,pos_x)
-                elif ch == curses.KEY_LEFT or ch == ord('h'):
-                    pos_x = check_pos('x',pos_x-1)
-                    move(pos_y,pos_x)
-                elif ch == curses.KEY_RIGHT or ch == ord('l'):
-                    pos_x = check_pos('x',pos_x+1)
-                    move(pos_y,pos_x)
-                elif ch == ord('i'):
-                    self.mode = 0
-            self._insert_loop()
+    def _normal_loop(self):
+        curses.cbreak()
+        curses.noecho()
+        pos_y,pos_x = curses.getsyx()
+        while self.mode == 1:
+            ch = self.stdscr.getch()
+            if ch == curses.KEY_UP or ch == ord('k'):
+                pos_y = check_pos(self.stdscr,'y',pos_y-1)
+                move(self.stdscr,pos_y,pos_x)
+            elif ch == curses.KEY_DOWN or ch == ord('j'):
+                pos_y = check_pos(self.stdscr,'y',pos_y+1)
+                move(self.stdscr,pos_y,pos_x)
+            elif ch == curses.KEY_LEFT or ch == ord('h'):
+                pos_x = check_pos(self.stdscr,'x',pos_x-1)
+                move(self.stdscr,pos_y,pos_x)
+            elif ch == curses.KEY_RIGHT or ch == ord('l'):
+                pos_x = check_pos(self.stdscr,'x',pos_x+1)
+                move(self.stdscr,pos_y,pos_x)
+            elif ch == ord('i'):
+                self.mode = 0
+        self._insert_loop()
 
         
