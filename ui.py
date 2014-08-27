@@ -2,6 +2,7 @@
 import curses
 from tools import *
 import sys,traceback
+import logging
 
 class UI(object):
     def __init__(self,sock=None):

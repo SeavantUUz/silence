@@ -3,6 +3,7 @@
 __all__ = ['covert','line_resize','parse','draw_line','draw_screen','move','draw_input','check_pos']
 
 import locale
+import logging
 locale.setlocale(locale.LC_ALL,'')
 code = locale.getpreferredencoding()
 
@@ -56,10 +57,12 @@ def draw_screen(stdscr, content, hight, width):
         move(stdscr, y, 0)
 
 def draw_input(stdscr, line, y, x):
+    logging.info(line)
     move(stdscr, y,0)
     stdscr.clrtoeol()
-    self.refresh()
+    stdscr.refresh()
     stdscr.addstr(line)
+    logging.info(line)
     move(stdscr,y,x)
 
 def check_pos(stdscr, type_, value):

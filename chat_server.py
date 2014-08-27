@@ -7,6 +7,7 @@ monkey.patch_socket()
 import select
 monkey.patch_select()
 from ui import UI
+import threading
 
 class Server(object):
     def __init__(self):
@@ -21,8 +22,9 @@ class Server(object):
         self.is_started = False
     
     def run(self):
-        if not self.is_started:
-            self.start()
+        logging.info("run!")
+        #if not self.is_started:
+        #    self.start()
         self._accept_loop()
 
     def start(self):
@@ -31,10 +33,12 @@ class Server(object):
         server_run = self.run
         ui_run = self.ui.run
         self.is_started = True
-        ui_run()
+        # gevent.spawn(server_run)
+        #threading.Thread(target=server_run).start()
         gevent.joinall([
-            gevent.spawn(server_run),
-            ])
+                        gevent.spawn(server_run),
+                        gevent.spawn(ui_run),
+                        ])
 
     def broadcast(self, sock, data):
         end_socks = []
@@ -49,15 +53,19 @@ class Server(object):
             self.connect_sockets.remove(_socket)
 
     def _accept_loop(self):
+        logging.info("loop!")
         while True:
             read_sockets, write_sockets, error_sockets = select.select(self.connect_sockets, [], [])
+            logging.info("select trigger")
             end_socks = []
             for sock in read_sockets:
                 if sock == self.server_socket:
                     sockfd, addr = self.server_socket.accept()
+                    logging.info(addr)
                     self.connect_sockets.append(sockfd)
+                    self.ui.append("{} enter the room".format(addr))
+                    logging.info("new client enter")
                     self.broadcast(sock, "{} enter the room".format(addr))
-                    print "{} enter the room".format(addr)
                 else:
                     try:
                         data = sock.recv(4096)
@@ -75,5 +83,6 @@ class Server(object):
         self.server_socket.close()
 
 if __name__ == "__main__":
+    logging.basicConfig(filename="log",level=logging.INFO)
     server = Server()
     server.start()

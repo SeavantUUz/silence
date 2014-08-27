@@ -1,6 +1,7 @@
 # coding:utf-8
 import socket
 import logging
+import gevent
 from gevent import monkey
 monkey.patch_socket()
 import select
@@ -47,7 +48,7 @@ class Client(object):
             client_run = self.run
             ui_run = self.ui.run
             gevent.spawn(client_run)
-            gevent.spawn(ui_run)
+            ui_run()
 
     def end(self):
         self.client_socket.close()
