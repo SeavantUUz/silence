@@ -20,6 +20,7 @@ class Server(object):
         self.connect_sockets.append(self.server_socket)
         self.ui = UI()
         self.is_started = False
+        self.test = test
     
     def run(self):
         logging.info("run!")
