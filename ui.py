@@ -3,6 +3,7 @@ import curses
 from tools import *
 import sys,traceback
 import logging
+import socket
 
 class UI(object):
     def __init__(self,sock=None):
@@ -10,11 +11,14 @@ class UI(object):
         self.mode = 0
         self.is_started = False
         self.sock = sock
+        self.is_continue = True
+        self.interrupt_sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
 
     def append(self, line):
         self.content.append(line)
 
     def start(self):
+        self.interrupt_sock.connect('interrupt.sock')
         self.stdscr = curses.initscr()
         y,x = self.stdscr.getmaxyx()
         draw_line(self.stdscr,y-2,x)
@@ -31,6 +35,8 @@ class UI(object):
             self.end()
 
     def end(self):
+        self.is_continue = False
+        logging.info("curses end")
         curses.endwin()
 
     def _insert_loop(self):
@@ -89,8 +95,13 @@ class UI(object):
             elif ch == curses.KEY_RIGHT or ch == ord('l'):
                 pos_x = check_pos(self.stdscr,'x',pos_x+1)
                 move(self.stdscr,pos_y,pos_x)
+            elif ch == ord('q'):
+                self.interrupt_sock.send("end")
+                break
             elif ch == ord('i'):
                 self.mode = 0
-        self._insert_loop()
-
+        if is_continue:
+            self._insert_loop()
+        else:
+            self.end()
         

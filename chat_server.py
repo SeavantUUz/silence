@@ -1,13 +1,14 @@
 # coding: utf-8
 import socket
 import logging
-import gevent
-from gevent import monkey
-monkey.patch_socket()
+# import gevent
+# from gevent import monkey
+# monkey.patch_socket()
 import select
-monkey.patch_select()
+# monkey.patch_select()
 from ui import UI
 import threading
+import os
 
 class Server(object):
     def __init__(self):
@@ -16,11 +17,13 @@ class Server(object):
         self.connect_sockets = []
         self.server_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.interrupt_socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         self.port = 3657
         self.connect_sockets.append(self.server_socket)
+        self.connect_sockets.append(self.interrupt_socket)
         self.ui = UI()
         self.is_started = False
-        self.test = test
+        self.is_continue = True
     
     def run(self):
         logging.info("run!")
@@ -29,17 +32,25 @@ class Server(object):
         self._accept_loop()
 
     def start(self):
-        self.server_socket.bind(("0.0.0.0",self.port))
+        self.server_socket.bind(("localhost",self.port))
         self.server_socket.listen(5)
+        try:
+            os.remove('interrupt.sock')
+        except OSError:
+            pass
+        self.interrupt_socket.bind('interrupt.sock')
+        self.interrupt_socket.listen(1)
         server_run = self.run
         ui_run = self.ui.run
         self.is_started = True
         # gevent.spawn(server_run)
         #threading.Thread(target=server_run).start()
-        gevent.joinall([
-                        gevent.spawn(server_run),
-                        gevent.spawn(ui_run),
-                        ])
+        ## gevent.joinall([
+        ##                 gevent.spawn(server_run),
+        ##                 gevent.spawn(ui_run),
+        ##                 ])
+        threading.Thread(target=ui_run).start()
+        server_run()
 
     def broadcast(self, sock, data):
         end_socks = []
@@ -55,7 +66,7 @@ class Server(object):
 
     def _accept_loop(self):
         logging.info("loop!")
-        while True:
+        while True and self.ui.is_continue and self.is_continue:
             read_sockets, write_sockets, error_sockets = select.select(self.connect_sockets, [], [])
             logging.info("select trigger")
             end_socks = []
@@ -67,6 +78,9 @@ class Server(object):
                     self.ui.append("{} enter the room".format(addr))
                     logging.info("new client enter")
                     self.broadcast(sock, "{} enter the room".format(addr))
+                elif sock == self.interrupt_socket:
+                    logging.info("interrupt socket target")
+                    break
                 else:
                     try:
                         data = sock.recv(4096)
@@ -79,8 +93,10 @@ class Server(object):
                         self.broadcast(sock, "Client {} is offline".format(addr))
                         sock.close()
                         end_socks.append(sock)
+            logging.info("interrupt end")
             for _socket in end_socks:
                 self.connect_sockets.remove(_socket)
+        logging.info("server socket end")
         self.server_socket.close()
 
 if __name__ == "__main__":
