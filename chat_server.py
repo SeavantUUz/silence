@@ -73,7 +73,6 @@ class Server(object):
             for sock in read_sockets:
                 if sock == self.server_socket:
                     sockfd, addr = self.server_socket.accept()
-                    logging.info(addr)
                     self.connect_sockets.append(sockfd)
                     self.ui.append("{} enter the room".format(addr))
                     logging.info("new client enter")
@@ -85,6 +84,8 @@ class Server(object):
                     try:
                         data = sock.recv(4096)
                         if data:
+                            logging.info("data: {}".format(type(data)))
+                            data = data.replace('\r','').replace('\n','')
                             content = str(sock.getpeername())+">"+data
                             # self.records.append(content)
                             self.ui.append(content)
@@ -97,6 +98,10 @@ class Server(object):
             for _socket in end_socks:
                 self.connect_sockets.remove(_socket)
         logging.info("server socket end")
+        try:
+            os.remove('interrupt.sock')
+        except OSError:
+            pass
         self.server_socket.close()
 
 if __name__ == "__main__":
