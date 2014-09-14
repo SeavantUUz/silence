@@ -30,7 +30,9 @@ class UI(object):
 
     def run(self):
         try:
+            logging.info("ui run")
             if not self.is_started:
+                logging.info("start")
                 self.start()
             self._insert_loop()
         except:
@@ -56,7 +58,11 @@ class UI(object):
                 if self.is_update:
                     self.stdscr.clear()
                     self.stdscr.refresh()
-                    draw_screen(self.stdscr, self.content,src_y-3,src_x-1)
+                    try:
+                        draw_screen(self.stdscr, self.content,src_y-3,src_x-1)
+                    except Exception:
+                        self.content.pop()
+                        draw_screen(self.stdscr, self.content,src_y-3,src_x-1)
                     draw_line(self.stdscr,src_y-2,src_x)
                     draw_input(self.stdscr, line, src_y-1, len(line))
                     self.is_update = False
@@ -67,7 +73,11 @@ class UI(object):
                     self.stdscr.refresh()
                     self.content.append(line)
                     line = ''
-                    draw_screen(self.stdscr, self.content,src_y-3,src_x-1)
+                    try:
+                        draw_screen(self.stdscr, self.content,src_y-3,src_x-1)
+                    except Exception:
+                        self.content.pop()
+                        draw_screen(self.stdscr, self.content,src_y-3,src_x-1)
                     draw_line(self.stdscr,src_y-2,src_x)
                     move(self.stdscr,src_y-1,0)
                     if self.sock:
@@ -89,9 +99,15 @@ class UI(object):
                         string = parse(ch)
                     self.stdscr.addstr(string)
                     line += string
-        except:
-            self._insert_loop()
-        self._normal_loop()
+        except Exception, err:
+            logging.info(sys.exc_info[0])
+            logging.info("insert end")
+            self.end()
+        else:
+            if self.mode == 0:
+                self.end()
+            else:
+                self._normal_loop()
 
     def _normal_loop(self):
         curses.cbreak()
@@ -104,7 +120,11 @@ class UI(object):
                 if self.is_update:
                     self.stdscr.clear()
                     self.stdscr.refresh()
-                    draw_screen(self.stdscr, self.content,src_y-3,src_x-1)
+                    try:
+                        draw_screen(self.stdscr, self.content,src_y-3,src_x-1)
+                    except Exception:
+                        self.content.pop()
+                        draw_screen(self.stdscr, self.content,src_y-3,src_x-1)
                     draw_line(self.stdscr,src_y-2,src_x)
                     draw_input(self.stdscr, line, src_y-1, len(line))
                     self.is_update = False
@@ -128,6 +148,9 @@ class UI(object):
                 elif ch == ord('i'):
                     self.mode = 0
         except:
-            self._normal_loop()
-        self._insert_loop()
-        
+            self.end()
+        else:
+            if self.mode == 1:
+                self.end()
+            else:
+                self._insert_loop()

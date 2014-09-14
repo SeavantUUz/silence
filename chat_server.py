@@ -68,7 +68,6 @@ class Server(object):
         logging.info("loop!")
         while True and self.ui.is_continue and self.is_continue:
             read_sockets, write_sockets, error_sockets = select.select(self.connect_sockets, [], [])
-            logging.info("select trigger")
             end_socks = []
             for sock in read_sockets:
                 if sock == self.server_socket:
@@ -78,7 +77,6 @@ class Server(object):
                     logging.info("new client enter")
                     self.broadcast(sock, "{} enter the room".format(addr))
                 elif sock == self.interrupt_socket:
-                    logging.info("interrupt socket target")
                     break
                 else:
                     try:
@@ -94,7 +92,6 @@ class Server(object):
                         self.broadcast(sock, "Client {} is offline".format(addr))
                         sock.close()
                         end_socks.append(sock)
-            logging.info("interrupt end")
             for _socket in end_socks:
                 self.connect_sockets.remove(_socket)
         logging.info("server socket end")

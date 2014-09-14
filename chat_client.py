@@ -1,13 +1,14 @@
 # coding:utf-8
 import socket
 import logging
-import gevent
-from gevent import monkey
-monkey.patch_socket()
-import select
-monkey.patch_select()
+## import gevent
+## from gevent import monkey
+## monkey.patch_socket()
+## import select
+## monkey.patch_select()
 import sys,os
 from ui import UI
+import threading
 
 class Client(object):
     def __init__(self):
@@ -34,21 +35,28 @@ class Client(object):
             except OSError:
                 pass
             # local server listen open
+            logging.info("client beginning")
             self.local_socket_server.bind('/tmp/silence.sock')
             self.local_socket_server.listen(1)
             # local client connect
             self.local_socket_client.connect('/tmp/silence.sock')
             self.client_socket.connect((self.host,self.port))
+            logging.info("hahhahaha")
             self.ui = UI(self.local_socket_client) 
+            logging.info(self.ui)
         except:
             logging.error("unable to connect")
+            raise()
             self.end()
             sys.exit()
         else:
             client_run = self.run
             ui_run = self.ui.run
-            gevent.spawn(client_run)
-            ui_run()
+            # gevent.spawn(client_run)
+            logging.info("client waiting runnning")
+            threading.Thread(target=ui_run).start()
+            logging.info("go to run")
+            client_run()
 
     def end(self):
         self.client_socket.close()
@@ -85,5 +93,6 @@ class Client(object):
             self.end()
 
 if __name__ == "__main__":
+    logging.basicConfig(filename="client.log", level=logging.INFO)
     client = Client()
     client.start()
