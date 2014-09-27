@@ -1,19 +1,21 @@
 #coding: utf-8
 import curses
 from tools import *
-import sys,traceback
+import sys
+from traceback import format_exc as einfo
 import logging
 import socket
 
 class UI(object):
-    def __init__(self,sock=None):
+    def __init__(self,is_client=False):
         self.content = []
         self.mode = 0
         self.is_started = False
-        self.sock = sock
+        self.is_client = is_client
         self.is_continue = True
         self.is_update = False
         self.interrupt_sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        self.client_termin_io = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
 
     def append(self, line):
         logging.info(line)
@@ -21,7 +23,11 @@ class UI(object):
         self.content.append(line)
 
     def start(self):
-        self.interrupt_sock.connect('interrupt.sock')
+        if self.is_client:
+            self.interrupt_sock.connect('client_interrupt.sock')
+        else:
+            self.interrupt_sock.connect('server_interrupt.sock')
+        # self.client_termin_io.connect('/tmp/silence.sock')
         self.stdscr = curses.initscr()
         self.stdscr.nodelay(True)
         y,x = self.stdscr.getmaxyx()
@@ -36,7 +42,7 @@ class UI(object):
                 self.start()
             self._insert_loop()
         except:
-            logging.info("error")
+            logging.info("error: {}".format(einfo()))
         finally:
             self.end()
 
@@ -80,8 +86,8 @@ class UI(object):
                         draw_screen(self.stdscr, self.content,src_y-3,src_x-1)
                     draw_line(self.stdscr,src_y-2,src_x)
                     move(self.stdscr,src_y-1,0)
-                    if self.sock:
-                        self.sock.send(line)
+                    # if self.is_client:
+                    #     self.client_termin_io.send(line)
                 elif ch == 27:
                     self.mode = 1
                     line = ''

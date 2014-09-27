@@ -35,10 +35,10 @@ class Server(object):
         self.server_socket.bind(("localhost",self.port))
         self.server_socket.listen(5)
         try:
-            os.remove('interrupt.sock')
+            os.remove('server_interrupt.sock')
         except OSError:
             pass
-        self.interrupt_socket.bind('interrupt.sock')
+        self.interrupt_socket.bind('server_interrupt.sock')
         self.interrupt_socket.listen(1)
         server_run = self.run
         ui_run = self.ui.run
@@ -96,7 +96,7 @@ class Server(object):
                 self.connect_sockets.remove(_socket)
         logging.info("server socket end")
         try:
-            os.remove('interrupt.sock')
+            os.remove('server_interrupt.sock')
         except OSError:
             pass
         self.server_socket.close()
