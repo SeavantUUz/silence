@@ -7,7 +7,7 @@ import logging
 import socket
 
 class UI(object):
-    def __init__(self,is_client=False):
+    def __init__(self, io_socket, io_port=3658, is_client=False):
         self.content = []
         self.mode = 0
         self.is_started = False
@@ -15,7 +15,8 @@ class UI(object):
         self.is_continue = True
         self.is_update = False
         self.interrupt_sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        self.client_termin_io = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        self.io_port = io_port
+        self.client_termin_io = io_socket
 
     def append(self, line):
         logging.info(line)
@@ -28,11 +29,20 @@ class UI(object):
         else:
             self.interrupt_sock.connect('server_interrupt.sock')
         # self.client_termin_io.connect('/tmp/silence.sock')
+        self.client_termin_io.connect(('localhost', self.io_port))
         self.stdscr = curses.initscr()
         self.stdscr.nodelay(True)
         y,x = self.stdscr.getmaxyx()
         draw_line(self.stdscr,y-2,x)
         self.is_started = True
+
+    def socket_send(self, content):
+        try:
+            logging.info("ui data {}".format(content))
+            sent = self.client_termin_io.send(content)
+            logging.info("sent characters: {}".format(sent))
+        except Exception:
+            logging.error("close error: {}".format(einfo()))
 
     def run(self):
         try:
@@ -77,6 +87,7 @@ class UI(object):
                 elif ch == 10:
                     self.stdscr.clear()
                     self.stdscr.refresh()
+                    self.socket_send(line)
                     self.content.append(line)
                     line = ''
                     try:
@@ -106,7 +117,7 @@ class UI(object):
                     self.stdscr.addstr(string)
                     line += string
         except Exception, err:
-            logging.info(sys.exc_info[0])
+            logging.info(sys.exc_info()[0])
             logging.info("insert end")
             self.end()
         else:

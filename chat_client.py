@@ -22,9 +22,18 @@ class Client(object):
         # self.sockets = [self.stdin, self.client_socket]
         # self.sockets = [self.local_socket_server, self.client_socket]
         self.interrupt_socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        try:
+            os.remove('client_termin_io.sock')
+        except OSError:
+            pass
+        self.s_termin_io = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.c_termin_io = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.s_termin_io.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.c_termin_io.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.sockets = [self.client_socket]
-        self.ui = UI(True) 
+        self.sockets.append(self.s_termin_io)
         self.is_started = False
+        self.io_port = 3659
 
     def run(self):
         #if not self.is_started:
@@ -32,15 +41,12 @@ class Client(object):
         self._loop()
 
     def start(self):
+        self.s_termin_io.bind(('localhost', self.io_port))
+        self.s_termin_io.listen(1)
         self.client_socket.connect(("localhost", self.port))
-        try:
-            os.remove("/tmp/silence.sock")
-        except OSError:
-            pass
-        # self.local_socket_server.bind('/tmp/silence.sock')
-        # self.local_socket_server.listen(1)
         self.interrupt_socket.bind('client_interrupt.sock')
         self.interrupt_socket.listen(1)
+        self.ui = UI(self.c_termin_io, self.io_port, True) 
         client_run = self.run
         ui_run = self.ui.run
         threading.Thread(target=ui_run).start()
@@ -70,6 +76,24 @@ class Client(object):
                         else:
                             logging.error("\nDisconnect from server")
                             sys.exit()
+                    elif _socket == self.interrupt_socket:
+                        continue
+                    elif _socket == self.s_termin_io:
+                        try:
+                            sockfd, addr = _socket.accept()
+                            self.io = sockfd
+                            self.sockets.append(self.io)
+                            data = self.io.recv(4096)
+                            if data:
+                                self.client_socket.send(data)
+                        except:
+                            self.io.close()
+                            logging.info("socket err, einfo {}".format(einfo()))
+                    else:
+                        data = _socket.recv(4096)
+                        if data:
+                            logging.info("data: {}".format(data))
+
                     # send msg
                     # elif _socket == self.local_socket_server:
                     #     msg = _socket.recv(4096)
