@@ -80,6 +80,7 @@ class Client(object):
                         continue
                     elif _socket == self.s_termin_io:
                         try:
+                            logging.info("client s_termin_io target")
                             sockfd, addr = _socket.accept()
                             self.io = sockfd
                             self.sockets.append(self.io)
@@ -89,6 +90,11 @@ class Client(object):
                         except:
                             self.io.close()
                             logging.info("socket err, einfo {}".format(einfo()))
+                    elif _socket == self.io:
+                        data = self.io.recv(4096)
+                        logging.info("client io send {}".format(data))
+                        if data:
+                            self.client_socket.send(data)
                     else:
                         data = _socket.recv(4096)
                         if data:
